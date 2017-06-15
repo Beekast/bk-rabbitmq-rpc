@@ -1,8 +1,8 @@
-# rabbitmq-rpc
+# bk-rabbitmq-rpc
 
 This is a very opinionated abstraction over amqplib to help simplify the implementation of RPC messaging patterns on RabbitMQ.
 
-> !IMPORTANT! - rabbitmq-rpc needs nodejs >= 8.x.
+> !IMPORTANT! - bk-rabbitmq-rpc needs nodejs >= 8.x.
 
 ### Features:
  * Creation of RPC services (client & server)
@@ -11,7 +11,7 @@ This is a very opinionated abstraction over amqplib to help simplify the impleme
 ## Installation
 
 ```(bash)
-npm install rabbitmq-rpc
+npm install bk-rabbitmq-rpc
 ```
 
 ## Getting started
@@ -19,7 +19,7 @@ npm install rabbitmq-rpc
 On RPC server :
 
 ```javascript
-const RabbitmqRPC = require('rabbitmq-rpc');
+const RabbitmqRPC = require('bk-rabbitmq-rpc');
 
 const client = new RabbitmqRPC();
 
@@ -36,7 +36,7 @@ service.handle('myMethod', function(data){
 ```
 On RPC Client :
 ```javascript
-const RabbitmqRPC = require('rabbitmq-rpc');
+const RabbitmqRPC = require('bk-rabbitmq-rpc');
 
 const client = new RabbitmqRPC();
 
