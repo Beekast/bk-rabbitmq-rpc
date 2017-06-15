@@ -1,0 +1,60 @@
+{
+  "name": "rabbitmq-rpc",
+  "version": "0.1.0",
+  "description": "Library for rabbitmq and use rpc service",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/ava",
+    "coverage": "./node_modules/.bin/nyc ./node_modules/.bin/ava",
+    "coverage:html": "./node_modules/.bin/nyc --reporter=html ./node_modules/.bin/ava",
+    "test:watch": "./node_modules/.bin/ava --watch",
+    "build-image": "docker build -t rabbitmq-rpc .",
+    "start-image": "docker run -d --name rabbitmq-rpc -p 15672:15672 -p 5672:5672 rabbitmq-rpc",
+    "lint": "./node_modules/.bin/eslint src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Beekast/rabbitmq-rpc.git"
+  },
+  "keywords": [
+    "rabbitmq",
+    "rpc",
+    "amqp"
+  ],
+  "author": "Tinque",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Beekast/rabbitmq-rpc/issues"
+  },
+  "homepage": "https://github.com/Beekast/rabbitmq-rpc#readme",
+  "devDependencies": {
+    "ava": "0.19.1",
+    "eslint": "4.0.0",
+    "nyc": "11.0.2"
+  },
+  "dependencies": {
+    "amqplib": "0.5.1",
+    "bunyan": "1.8.10",
+    "uuid": "3.0.1"
+  },
+  "ava": {
+    "files": [
+      "src/**/*.spec.js",
+	  "tests/*.js"
+    ],
+    "source": [
+      "src/**/*.js"
+    ],
+    "concurrency": 5,
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false
+  },
+  "nyc": {
+    "exclude": [
+      "src/**/*.spec.js",
+	  "tests/*.js"
+    ]
+  }
+}

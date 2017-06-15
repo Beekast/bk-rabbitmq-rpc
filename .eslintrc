@@ -1,0 +1,121 @@
+// This file shall be maintained in master/.eslinrc and spreaded via bin/spread-eslintrc to all repos
+{
+    "extends": "eslint:recommended",
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 8
+    },
+    // Rules should be written in the order of the ESLint docs for easier management: http://eslint.org/docs/rules/
+    "rules": {
+
+        // Possible Errors
+        "no-await-in-loop": 2,
+        "no-compare-neg-zero": 2,
+        "no-console": 1,
+        "no-debugger": 1,
+        "no-extra-parens": 1,
+        "no-template-curly-in-string": 1,
+
+        // Best Practices
+        "array-callback-return": 2,
+        "block-scoped-var": 1,
+        "complexity": [1, 10],
+        "consistent-return": 1,
+        "curly": 1,
+        "default-case": 2,
+        "dot-location": [1, "property"],
+        "dot-notation": 2,
+        "eqeqeq": [2, "smart"],
+        "guard-for-in": 1,
+        "no-alert": 1,
+        "no-caller": 2,
+        "no-empty-function": 1,
+        "no-eval": 2,
+        "no-extra-bind": 1,
+        "no-extra-label": 1,
+        "no-floating-decimal": 2,
+        "no-implied-eval": 2,
+        "no-iterator": 2,
+        "no-loop-func": 2,
+        //"no-magic-numbers": [1, { "ignore": [-1,0,1,2], "ignoreArrayIndexes": true }],
+        "no-multi-spaces": 1,
+        "no-octal-escape": 2,
+        "no-proto": 2,
+        "no-return-assign": 1,
+        "no-return-await": 2,
+        "no-script-url": 2,
+        "no-sequences": 2,
+        "no-self-compare": 2,
+        "no-throw-literal": 1,
+        "no-unmodified-loop-condition": 1,
+        "no-unused-expressions": 1,
+        "no-useless-call": 1,
+        "no-useless-concat": 1,
+        "no-useless-escape": 1,
+        "no-useless-return": 1,
+        "no-void": 1,
+        "no-warning-comments": [1, { "terms": ["fixme"], "location": "anywhere" }],
+        "no-with": 1,
+        "prefer-promise-reject-errors": 1,
+        "require-await": 1,
+        "yoda": 1,
+
+        // Variables
+        "no-label-var": 2,
+        "no-unused-vars": [1, {
+            "vars": "all",
+            "args": "after-used"
+        }],
+
+        // Stylistic Issues
+        "array-bracket-spacing": [1, "never"],
+        "block-spacing": 1,
+        "brace-style": [1, "1tbs", { "allowSingleLine": true }],
+        "camelcase": [1, {
+            "properties": "never"
+        }],
+        "comma-dangle": [1, "never"],
+        "comma-spacing": [1, { "before": false, "after": true }],
+        "comma-style": 1,
+        "computed-property-spacing": [1, "never"],
+        "eol-last": [1, "always"],
+        "func-call-spacing": [1, "never"],
+        "indent": [1, "tab", { "SwitchCase": 1 }],
+        "key-spacing": [1, { "beforeColon": false, "afterColon": true }],
+        "keyword-spacing": 1,
+        "linebreak-style": [2, "unix"],
+        "max-depth": [1, { "max": 4 }],
+        "max-len": [1, { "code": 120, "tabWidth": 4, "ignoreRegExpLiterals": true, "ignoreStrings": true }],
+        "max-lines": [1, { "max": 999 }],
+        "max-statements": [1, 25],
+        "no-continue": 1,
+        "no-mixed-spaces-and-tabs": 1,
+        "no-multiple-empty-lines": [1, {
+            "max": 2,
+            "maxBOF": 0,
+            "maxEOF": 1
+        }],
+        "no-negated-condition": 1,
+        "no-trailing-spaces": 2,
+        "no-underscore-dangle": 0,
+        "no-whitespace-before-property": 1,
+        "operator-linebreak": [1, "after"],
+        "quote-props": [1, "as-needed"],
+        "quotes": [2, "single", "avoid-escape"],
+        "semi": [2, "always"],
+        "semi-spacing": [1, {"before": false, "after": true}],
+        "space-before-function-paren": [1, "always"],
+        "spaced-comment": [1, "always"],
+
+        // ECMAScript 6
+        "arrow-parens": [1, "always"],
+        "arrow-spacing": 1,
+        "no-duplicate-imports": 2,
+        "sort-imports": 1,
+        "template-curly-spacing": 1
+    }
+}
