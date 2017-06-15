@@ -5,7 +5,7 @@ const RabbitmqRPC = require('../src');
 const client = new RabbitmqRPC();
 
 const service = client.createService('my.service.rpc', {
-	autostartConsume: true,
+	autoStartConsume: true,
 	responseQueue: false
 });
 
