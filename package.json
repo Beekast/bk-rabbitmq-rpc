@@ -1,5 +1,5 @@
 {
-  "name": "rabbitmq-rpc",
+  "name": "bk-bk-rabbitmq-rpc",
   "version": "0.1.0",
   "description": "Library for rabbitmq and use rpc service",
   "main": "src/index.js",
@@ -8,13 +8,13 @@
     "coverage": "./node_modules/.bin/nyc ./node_modules/.bin/ava",
     "coverage:html": "./node_modules/.bin/nyc --reporter=html ./node_modules/.bin/ava",
     "test:watch": "./node_modules/.bin/ava --watch",
-    "build-image": "docker build -t rabbitmq-rpc .",
-    "start-image": "docker run -d --name rabbitmq-rpc -p 15672:15672 -p 5672:5672 rabbitmq-rpc",
+    "build-image": "docker build -t bk-rabbitmq-rpc .",
+    "start-image": "docker run -d --name bk-rabbitmq-rpc -p 15672:15672 -p 5672:5672 bk-rabbitmq-rpc",
     "lint": "./node_modules/.bin/eslint src"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Beekast/rabbitmq-rpc.git"
+    "url": "git+https://github.com/Beekast/bk-rabbitmq-rpc.git"
   },
   "keywords": [
     "rabbitmq",
@@ -24,9 +24,9 @@
   "author": "Tinque",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Beekast/rabbitmq-rpc/issues"
+    "url": "https://github.com/Beekast/bk-rabbitmq-rpc/issues"
   },
-  "homepage": "https://github.com/Beekast/rabbitmq-rpc#readme",
+  "homepage": "https://github.com/Beekast/bk-rabbitmq-rpc#readme",
   "devDependencies": {
     "ava": "0.19.1",
     "eslint": "4.0.0",
