@@ -18,7 +18,7 @@ npm install rabbitmq-rpc
 
 On RPC server :
 
-```(javascript)
+```javascript
 const RabbitmqRPC = require('rabbitmq-rpc');
 
 const client = new RabbitmqRPC();
@@ -35,7 +35,7 @@ service.handle('myMethod', function(data){
 });
 ```
 On RPC Client :
-```(javascript)
+```javascript
 const RabbitmqRPC = require('rabbitmq-rpc');
 
 const client = new RabbitmqRPC();
@@ -89,7 +89,7 @@ PRs with insufficient coverage, broken tests or deviation from the style will no
 
 ### Run tests
 
-```(bash)
+```bash
 # With docker
 npm run build-image #to build rabbitmq Image
 npm run start-image #to start rabbitmq on localhost
@@ -103,6 +103,7 @@ npm run lint
 
 # run coverage
 npm run coverage
+```
 
 ### TODO
  * Add better coverage test
