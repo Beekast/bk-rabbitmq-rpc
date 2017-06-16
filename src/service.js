@@ -112,16 +112,18 @@ class Service {
 	}
 
 	reconnect (){
-		this._log.info('reconnect service');
-		this.requestChannel = this.connection.getChannel();
-		if (this.isConsumerStarted){
-			this.consumePromise = this._consume();
-		}
+		return setTimeout(() => {
+			this._log.info('reconnect service');
+			this.requestChannel = this.connection.getChannel();
+			if (this.isConsumerStarted){
+				this.consumePromise = this._consume();
+			}
 
-		if (this.responseQueue) {
-			this.createResponseQueuePromise = null;
-			this.createResponseQueue();
-		}
+			if (this.responseQueue) {
+				this.createResponseQueuePromise = null;
+				this.createResponseQueue();
+			}
+		}, this.connection.reconnectDelay);
 	}
 
 

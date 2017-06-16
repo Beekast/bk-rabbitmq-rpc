@@ -10,6 +10,8 @@ class RabbitmqRPC {
 			logLevel = 'info',
 			logName = 'RabbitmqRPC',
 			exchangeName = 'RabbitmqRPC',
+			reconnectDelay = 1000,
+			autoReconnect = true,
 			log
 		} = opts || {};
 
@@ -22,7 +24,9 @@ class RabbitmqRPC {
 		this._connection = new Connection({
 			url,
 			log: this._log,
-			exchangeName
+			exchangeName,
+			reconnectDelay,
+			autoReconnect
 		});
 	}
 

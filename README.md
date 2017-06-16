@@ -60,6 +60,8 @@ Return a new RabbitmqRPC client.
  * `logName` : Log name for Bunyan = (default : `RabbitmqRPC`)
  * `exchangeName` : Exchange name for handle RPC request  (default : `RabbitmqRPC`)
  * `log` : Custom log instance (require to implement function trace, debug, info, warn and error)
+ * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
+ * `autoReconnect` : Enable autoReconnect option (default `true`)
 
 ### {client} createService(options)
 Return a service object
@@ -107,7 +109,7 @@ npm run coverage
 
 ### TODO
  * Add better coverage test
- * Add autoReconnect options
+ * Add better reconnection method => sometime the connections aren't really closed
  * ...
 
 ## License
