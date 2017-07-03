@@ -41,12 +41,17 @@ const RabbitmqRPC = require('bk-rabbitmq-rpc');
 const client = new RabbitmqRPC();
 
 // create a your first service
-const service = client.createService('myFirstService',{ autoStartConsume: false })
+const service = client.createService('myFirstService',{ autoStartConsume: false });
 
 // on rpc client ask the service method
 service.request('myMethod',data).then((result) => {
 	console.log(result);
-})
+});
+
+// you can also call request directly from the client instance
+client.request('myFirstService', 'myMethod', data).then((result) => {
+	console.log(result);
+});
 
 ```
 
@@ -62,6 +67,14 @@ Return a new RabbitmqRPC client.
  * `log` : Custom log instance (require to implement function trace, debug, info, warn and error)
  * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
  * `autoReconnect` : Enable autoReconnect option (default `true`)
+
+### {Promise} request(serviceName, method, data)
+Request a method on a service.
+`serviceName` this is the name of the service you want to call.
+`method` is the method name, you have to use alphanum string for the method name.
+`data` is the data send to the client.
+
+This function return a Promise.
 
 ### {client} createService(options)
 Return a service object
