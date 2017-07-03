@@ -63,8 +63,18 @@ Return a new RabbitmqRPC client.
  * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
  * `autoReconnect` : Enable autoReconnect option (default `true`)
 
-### {client} createService(options)
+
+### {client} request(serviceName, method,data)
+Request a method on a service.
+`serviceName` string for the service name.
+`method` is the method name, you have to use alphanum string for the method name.
+`data` is the data send to the client.
+
+This function return a Promise.
+
+### {client} createService(serviceName, options)
 Return a service object
+`serviceName` string for the service name.
 `options` are :
 * `autoStartConsume` : If the service start to consume RPC message at the beginning (default : `false`)
 * `replyTimeout` : Timeout for rpc request in ms (default : `2000`)
@@ -76,13 +86,6 @@ Handle a method for the service.
 `function` is the function called. It can be a function or a promise. The return of the function is return to the client. The function take one arg whose is the data send by the client.
 
 > !IMPORTANT! - if you don't use the option autoStartConsume: true on service constructor don't forget to call service.startConsume() to handle the RabbitmqRPC message.
-
-### {service} request(method,data)
-Request a method on a service.
-`method` is the method name, you have to use alphanum string for the method name.
-`data` is the data send to the client.
-
-This function return a Promise.
 
 ## Contributing
 
