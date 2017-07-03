@@ -1,18 +1,12 @@
-const uuidV4 = require('uuid/v4');
-
 class Service {
 
 	constructor (serviceName, opts, connection, log){
 		const {
 			autoCreateQueue = true,
-			autoStartConsume = false,
-			responseQueue = true,
-			replyTimeout = 2000
+			autoStartConsume = false
 		} = opts || {};
 
 		this._handler = [];
-		this._subscribtion = [];
-		this.replyTimeout = replyTimeout;
 		this.isConsumerStarted = false;
 		this._log = log;
 
@@ -48,42 +42,10 @@ class Service {
 		}
 
 		// Create responsequeue for service
-		if (responseQueue){
-			if (typeof responseQueue === 'boolean'){
-				this.responseQueue = this.serviceName + '-responseQueue-'+uuidV4();
-			} else {
-				this.responseQueue = responseQueue;
-			}
-			this.createResponseQueue();
-		}
+
 
 		this.requestChannel = connection.getChannel();
 
-	}
-
-	createResponseQueue (){
-		if (this.createResponseQueuePromise){
-			return this.createResponseQueuePromise;
-		} else {
-			this.createResponseQueuePromise = this.connection.getChannel()
-			.then((channel) => {
-				return channel.assertQueue(this.responseQueue, {durable: false, exclusive: true, autoDelete: true})
-				.then(({queue}) => {
-					return channel.consume(queue, (message) => {
-						const requestId = message.properties.correlationId;
-						const {
-							err,
-							data
-						} = JSON.parse(message.content.toString());
-						if (requestId && this._subscribtion[requestId]){
-							this._subscribtion[requestId](err, data);
-						}
-						channel.ack(message);
-					});
-				});
-			});
-			return this.createResponseQueuePromise;
-		}
 	}
 
 	createQueue (){
@@ -191,57 +153,6 @@ class Service {
 			this.consumePromise = this._consume();
 			return this.consumePromise;
 		}
-	}
-
-	request (method, data) {
-		const requestId = uuidV4();
-
-		const content = JSON.stringify(data);
-
-		return new Promise((resolve, reject) => {
-
-			const timeout = setTimeout( () => {
-				delete this._subscribtion[requestId];
-				return reject( new Error( 'No reply received within the configured timeout of ' + this.replyTimeout + ' ms' ) );
-			}, this.replyTimeout );
-
-
-			this._subscribtion[requestId] = (err, data) => {
-				delete this._subscribtion[requestId];
-				clearTimeout( timeout );
-				if (err){
-					return reject(new Error(err));
-				}
-				return resolve(data);
-			};
-
-			const bufferContent = new Buffer(content);
-
-			Promise.all([
-				this.createQueue(),
-				this.createResponseQueue()
-			])
-			.then(() => {
-				this.requestChannel
-				.then((channel) => {
-					channel.publish(
-						this.connection.exchangeName,
-						this.serviceName,
-						bufferContent,
-						{
-							expiration: this.replyTimeout,
-							correlationId: requestId,
-							replyTo: this.responseQueue,
-							type: method
-						}
-					);
-				});
-			})
-			.catch((err) => {
-				this._log.error(err);
-				return reject(err);
-			});
-		});
 	}
 }
 

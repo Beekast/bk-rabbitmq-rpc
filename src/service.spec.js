@@ -27,28 +27,6 @@ test('test instance with default args', (t) => {
 	}
 });
 
-test('test instance with custom responsequeue name', (t) => {
-	try {
-		new Service('test', {
-			responseQueue: 'customresponseQueue'
-		}, connection, connection.log);
-		t.pass('ok');
-	} catch (err){
-		t.fail(err);
-	}
-});
-
-test('test instance without responsequeue', (t) => {
-	try {
-		new Service('test', {
-			responseQueue: false
-		}, connection, connection.log);
-		t.pass('ok');
-	} catch (err){
-		t.fail(err);
-	}
-});
-
 
 test('test failed without service name', (t) => {
 	try {

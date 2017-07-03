@@ -2,11 +2,25 @@ const test = require('ava');
 
 const RabbitmqRPC = require('../src');
 
+const uuidV4 = require('uuid/v4');
+
+
+let client;
+test.before((t) => {
+	try {
+		const opts = {
+			exchangeName: 'testBKRabbitRPC-'+uuidV4()
+		};
+		client = new RabbitmqRPC(opts);
+		t.pass('ok');
+	} catch (err){
+		t.fail(err);
+	}
+});
+
 
 test('test integration with promise', async (t) => {
 	try {
-		const client = new RabbitmqRPC();
-
 		const service = client.createService('serviceNamePromise', {
 			autoStartConsume: true
 		});
@@ -15,7 +29,7 @@ test('test integration with promise', async (t) => {
 				return resolve(data.a + data.b);
 			});
 		});
-		const result = await service.request('serviceMethodPromise', {a: 1, b: 2});
+		const result = await client.request('serviceNamePromise', 'serviceMethodPromise', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -30,8 +44,6 @@ test('test integration with promise', async (t) => {
 
 test('test integration with async function', async (t) => {
 	try {
-		const client = new RabbitmqRPC();
-
 		const service = client.createService('serviceNameAsync', {
 			autoStartConsume: true
 		});
@@ -40,7 +52,7 @@ test('test integration with async function', async (t) => {
 			return await data.a + data.b;
 		});
 
-		const result = await service.request('serviceMethodAsync', {a: 1, b: 2});
+		const result = await client.request('serviceNameAsync', 'serviceMethodAsync', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -54,8 +66,6 @@ test('test integration with async function', async (t) => {
 
 test('test integration with classical function', async (t) => {
 	try {
-		const client = new RabbitmqRPC();
-
 		const service = client.createService('serviceNameClassical', {
 			autoStartConsume: true
 		});
@@ -64,7 +74,7 @@ test('test integration with classical function', async (t) => {
 			return data.a + data.b;
 		});
 
-		const result = await service.request('serviceMethodClassical', {a: 1, b: 2});
+		const result = await client.request('serviceNameClassical', 'serviceMethodClassical', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -78,8 +88,6 @@ test('test integration with classical function', async (t) => {
 
 test('test integration with handler error throw', async (t) => {
 	try {
-		const client = new RabbitmqRPC();
-
 		const service = client.createService('serviceNameThrow', {
 			autoStartConsume: true
 		});
@@ -88,7 +96,7 @@ test('test integration with handler error throw', async (t) => {
 			throw new Error('Error !!!!');
 		});
 
-		await t.throws(service.request('serviceMethodThrow', {a: 1, b: 2}));
+		await t.throws(client.request('serviceNameThrow', 'serviceMethodThrow', {a: 1, b: 2}));
 
 	} catch (e) {
 		t.fail(e);
@@ -99,14 +107,12 @@ test('test integration with handler error throw', async (t) => {
 
 test('test integration with no-handler => timeout throw', async (t) => {
 	try {
-		const client = new RabbitmqRPC();
-
-		const service = client.createService('serviceNameThrow2', {
+		client.createService('serviceNameThrow2', {
 			autoStartConsume: true
 		});
 
 
-		await t.throws(service.request('serviceMethodThrow2', {a: 1, b: 2}));
+		await t.throws(client.request('serviceNameThrow2', 'serviceMethodThrow2', {a: 1, b: 2}));
 
 	} catch (e) {
 		t.fail(e);
