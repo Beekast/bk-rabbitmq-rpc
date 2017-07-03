@@ -1,4 +1,3 @@
-const uuidV4 = require('uuid/v4');
 const Connection = require('./connection');
 const Logger = require('./logger');
 const Service = require('./service');
@@ -13,12 +12,9 @@ class RabbitmqRPC {
 			exchangeName = 'RabbitmqRPC',
 			reconnectDelay = 1000,
 			autoReconnect = true,
-			responseQueuePrefix = 'default',
-			replyTimeout = 1000,
 			log
 		} = opts || {};
-		this.replyTimeout = replyTimeout;
-		this._subscribtion = {};
+
 		this._url = url;
 		this._log = log || Logger({
 			level: logLevel,
@@ -31,76 +27,6 @@ class RabbitmqRPC {
 			exchangeName,
 			reconnectDelay,
 			autoReconnect
-		});
-
-		this.responseQueue = responseQueuePrefix + '-responseQueue-' + uuidV4();
-		this.createResponseQueue();
-		this.requestChannel = this._connection.getChannel();
-	}
-
-	createResponseQueue () {
-		if (!this.createResponseQueuePromise) {
-			let connectionChannel;
-			this.createResponseQueuePromise = this._connection.getChannel()
-				.then((channel) => {
-					connectionChannel = channel;
-					return channel.assertQueue(this.responseQueue, {durable: false, exclusive: true, autoDelete: true});
-				})
-				.then(({queue}) => {
-					connectionChannel.consume(queue, (message) => {
-						const requestId = message.properties.correlationId;
-						const {err, data} = JSON.parse(message.content.toString());
-						if (requestId && this._subscribtion[requestId]) {
-							this._subscribtion[requestId](err, data);
-						}
-						connectionChannel.ack(message);
-					});
-				});
-		}
-		return this.createResponseQueuePromise;
-	}
-
-	request (serviceName, commandName, data) {
-		const requestId = uuidV4();
-		let content;
-		try {
-			content = JSON.stringify(data || {});
-		} catch (err) {
-			return Promise.reject(err);
-		}
-
-		return new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				delete this._subscribtion[requestId];
-				return reject( new Error( 'No reply received within the configured timeout of ' + this.replyTimeout + ' ms' ) );
-			}, this.replyTimeout);
-
-			this._subscribtion[requestId] = (err, data) => {
-				delete this._subscribtion[requestId];
-				clearTimeout(timeout);
-				if (err) {
-					reject(new Error(err));
-				} else {
-					resolve(data);
-				}
-			};
-
-			const bufferContent = new Buffer(content);
-
-			Promise.all([
-				this.createResponseQueue()
-			]).then(() => this.requestChannel)
-			.then((channel) => {
-				channel.publish(this._connection.exchangeName, serviceName, bufferContent, {
-					expiration: this.replyTimeout,
-					correlationId: requestId,
-					replyTo: this.responseQueue,
-					type: commandName
-				});
-			}).catch((err) => {
-				this._log.error(err);
-				return reject(err);
-			});
 		});
 	}
 

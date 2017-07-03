@@ -54,19 +54,3 @@ test('test failed create Service without name', (t) => {
 		t.fail(err);
 	}
 });
-
-test('test createResponseQueue returned type', (t) => {
-	const client = new RabbitmqRPC();
-	const responseQueue = client.createResponseQueue();
-	if (responseQueue instanceof Promise) {
-		t.pass();
-	} else {
-		t.fail();
-	}
-	return responseQueue;
-});
-
-test('test createResponseQueue should not throw error', () => {
-	const client = new RabbitmqRPC();
-	return client.createResponseQueue();
-});
