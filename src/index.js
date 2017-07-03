@@ -14,10 +14,11 @@ class RabbitmqRPC {
 			reconnectDelay = 1000,
 			autoReconnect = true,
 			responseQueuePrefix = 'default',
-			replyTimeout = 1000,
+			replyTimeout = 2000,
 			log
 		} = opts || {};
 		this.replyTimeout = replyTimeout;
+		this._serviceQueuePromises = [];
 		this._subscribtion = {};
 		this._url = url;
 		this._log = log || Logger({
@@ -60,6 +61,19 @@ class RabbitmqRPC {
 		return this.createResponseQueuePromise;
 	}
 
+	createQueue (serviceName) {
+		if (!this._serviceQueuePromises[serviceName]) {
+			let channel;
+			this._serviceQueuePromises[serviceName] = this._connection.getChannel().then((_channel) => {
+				channel = _channel;
+				return channel.assertQueue(serviceName, {durable: true});
+			}).then(({queue}) => {
+				return channel.bindQueue(queue, this._connection.exchangeName, serviceName);
+			}).then(() => channel.close);
+		}
+		return this._serviceQueuePromises[serviceName];
+	}
+
 	request (serviceName, commandName, data) {
 		const requestId = uuidV4();
 		let content;
@@ -88,6 +102,7 @@ class RabbitmqRPC {
 			const bufferContent = new Buffer(content);
 
 			Promise.all([
+				this.createQueue(serviceName),
 				this.createResponseQueue()
 			]).then(() => this.requestChannel)
 			.then((channel) => {

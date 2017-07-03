@@ -152,7 +152,7 @@ test('test client request integration with async function', async (t) => {
 			return await data.a + data.b;
 		});
 
-		const result = await client.request('clientServiceNameAsync', 'serviceMethodAsync',  {a: 1, b: 2});
+		const result = await client.request('clientServiceNameAsync', 'serviceMethodAsync', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
