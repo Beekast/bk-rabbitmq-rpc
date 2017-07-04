@@ -40,11 +40,8 @@ const RabbitmqRPC = require('bk-rabbitmq-rpc');
 
 const client = new RabbitmqRPC();
 
-// create a your first service
-const service = client.createService('myFirstService',{ autoStartConsume: false })
-
 // on rpc client ask the service method
-service.request('myMethod',data).then((result) => {
+client.request('myFirstService','myMethod',data).then((result) => {
 	console.log(result);
 })
 
@@ -62,7 +59,8 @@ Return a new RabbitmqRPC client.
  * `log` : Custom log instance (require to implement function trace, debug, info, warn and error)
  * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
  * `autoReconnect` : Enable autoReconnect option (default `true`)
-
+ * `responseQueue` : If `true`, the responseQueue will be generated, it's possible to use a string to define. Use `false` for no responseQueue (default : `true`)
+* `replyTimeout` : Timeout for rpc request in ms (default : `2000`)
 
 ### {client} request(serviceName, method,data)
 Request a method on a service.
@@ -77,8 +75,6 @@ Return a service object
 `serviceName` string for the service name.
 `options` are :
 * `autoStartConsume` : If the service start to consume RPC message at the beginning (default : `false`)
-* `replyTimeout` : Timeout for rpc request in ms (default : `2000`)
-* `responseQueue` : If `true`, the responseQueue will be generated, it's possible to use a string to define. Use `false` for no responseQueue (default : `true`)
 
 ### {service} handle(method,function(data) {})
 Handle a method for the service.
