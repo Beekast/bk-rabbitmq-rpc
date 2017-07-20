@@ -1,6 +1,6 @@
 {
   "name": "bk-rabbitmq-rpc",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Library for rabbitmq and use rpc service",
   "main": "src/index.js",
   "scripts": {

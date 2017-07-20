@@ -104,7 +104,7 @@ class RabbitmqRPC {
 
 			const timeout = setTimeout( () => {
 				delete this._requests[requestId];
-				return reject( new Error( 'No reply received within the configured timeout of ' + this._replyTimeout + ' ms' ) );
+				return reject( new Error( 'No reply received within the configured timeout of ' + this._replyTimeout + ' ms service : ['+serviceName+'] method : ['+method+']' ) );
 			}, this._replyTimeout );
 
 

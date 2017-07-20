@@ -91,16 +91,17 @@ class Service {
 
 
 	_consume (){
-		this._log.debug('start to consume service'+this.serviceName);
+		this._log.debug('start to consume service '+this.serviceName);
+		const self = this;
 		return this.connection.getChannel()
 		.then((channel) => {
 			return channel.consume(this.serviceQueueName, (message) => {
 				const requestId = message.properties.correlationId;
 				const responseQueue = message.properties.replyTo;
 				const method = message.properties.type;
-				this._log.debug('received new message to consume');
+				this._log.debug('received new message to consume for service '+self.serviceName);
 				if (this._handler[method]){
-					this._log.debug('find handler to consume');
+					this._log.debug('find handler to consume for service '+self.serviceName+' and method '+method);
 					const data = JSON.parse(message.content.toString());
 					let handler;
 					try {
@@ -124,7 +125,7 @@ class Service {
 						);
 					})
 					.catch((err) => {
-						this._log.debug('Handler throw an error');
+						this._log.debug('Handler throw an error for service '+self.serviceName+' and method '+method);
 						const encodedresult = new Buffer(JSON.stringify({
 							err: err.message,
 							data: null
@@ -139,7 +140,7 @@ class Service {
 					});
 					channel.ack(message);
 				} else {
-					this._log.debug('did\'nt find handler to consume :(');
+					this._log.debug('did\'nt find handler to consume :( for service '+self.serviceName);
 					channel.nack(message);
 				}
 			});
