@@ -71,7 +71,7 @@ class RabbitmqRPC {
 		} else {
 			if (this._responseQueue){
 				// force to have a responseQueue name in case of request without responseQueue
-				this._responseQueue = this.exchangeName + '-responseQueue-'+uuidV4();
+				this._responseQueue = this._connection.exchangeName + '-responseQueue-'+uuidV4();
 			}
 
 			this.createResponseQueuePromise = this._connection.getChannel()
