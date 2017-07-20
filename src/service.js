@@ -15,6 +15,7 @@ class Service {
 		}
 
 		this.serviceName = serviceName;
+		this.serviceQueueName = connection.exchangeName +'.'+serviceName;
 
 		if (!connection){
 			throw new Error('no connection provide');
@@ -54,7 +55,7 @@ class Service {
 		} else {
 			this.createQueuePromise = this.connection.getChannel()
 			.then((channel) => {
-				return channel.assertQueue(this.serviceName, {durable: true})
+				return channel.assertQueue(this.serviceQueueName, {durable: true})
 				.then(({queue}) => {
 					return channel.bindQueue(queue, this.connection.exchangeName, this.serviceName)
 					.then(() => {
@@ -93,7 +94,7 @@ class Service {
 		this._log.debug('start to consume service'+this.serviceName);
 		return this.connection.getChannel()
 		.then((channel) => {
-			return channel.consume(this.serviceName, (message) => {
+			return channel.consume(this.serviceQueueName, (message) => {
 				const requestId = message.properties.correlationId;
 				const responseQueue = message.properties.replyTo;
 				const method = message.properties.type;
@@ -114,7 +115,6 @@ class Service {
 							err: null,
 							data: result
 						}));
-						console.log(responseQueue);
 						channel.sendToQueue(
 							responseQueue,
 							encodedresult,
