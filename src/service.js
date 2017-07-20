@@ -114,6 +114,7 @@ class Service {
 							err: null,
 							data: result
 						}));
+						console.log(responseQueue);
 						channel.sendToQueue(
 							responseQueue,
 							encodedresult,
@@ -147,10 +148,14 @@ class Service {
 
 	startConsume (){
 		this.isConsumerStarted = true;
+		const self = this;
 		if (this.consumePromise){
 			return this.consumePromise;
 		} else {
-			this.consumePromise = this._consume();
+			this.consumePromise = this.createQueue()
+			.then(() => {
+				return self._consume();
+			});
 			return this.consumePromise;
 		}
 	}

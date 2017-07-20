@@ -21,15 +21,18 @@ test.before((t) => {
 
 test('test integration with promise', async (t) => {
 	try {
-		const service = client.createService('serviceNamePromise', {
-			autoStartConsume: true
+
+		const serviceName = 'serviceNamePromise' + uuidV4();
+		const service = client.createService(serviceName, {
+			autoStartConsume: false
 		});
 		service.handle('serviceMethodPromise', function (data){
 			return new Promise((resolve) => {
 				return resolve(data.a + data.b);
 			});
 		});
-		const result = await client.request('serviceNamePromise', 'serviceMethodPromise', {a: 1, b: 2});
+		await service.startConsume();
+		const result = await client.request(serviceName, 'serviceMethodPromise', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -44,15 +47,18 @@ test('test integration with promise', async (t) => {
 
 test('test integration with async function', async (t) => {
 	try {
-		const service = client.createService('serviceNameAsync', {
-			autoStartConsume: true
+		const serviceName = 'serviceNameAsync' + uuidV4();
+		const service = client.createService(serviceName, {
+			autoStartConsume: false
 		});
 
 		service.handle('serviceMethodAsync', async function (data){
 			return await data.a + data.b;
 		});
 
-		const result = await client.request('serviceNameAsync', 'serviceMethodAsync', {a: 1, b: 2});
+		await service.startConsume();
+
+		const result = await client.request(serviceName, 'serviceMethodAsync', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -66,15 +72,44 @@ test('test integration with async function', async (t) => {
 
 test('test integration with classical function', async (t) => {
 	try {
-		const service = client.createService('serviceNameClassical', {
-			autoStartConsume: true
+		const serviceName = 'serviceNameClassical' + uuidV4();
+		const service = client.createService(serviceName, {
+			autoStartConsume: false
 		});
 
 		service.handle('serviceMethodClassical', function (data){
 			return data.a + data.b;
 		});
 
-		const result = await client.request('serviceNameClassical', 'serviceMethodClassical', {a: 1, b: 2});
+		await service.startConsume();
+
+		const result = await client.request(serviceName, 'serviceMethodClassical', {a: 1, b: 2});
+		if (result === 3){
+			t.pass();
+		} else {
+			t.fail('bad result');
+		}
+
+	} catch (err){
+		t.fail(err);
+	}
+});
+
+test('test integration with start consume function later', async (t) => {
+	try {
+
+		const serviceName = 'serviceNameConsumeLater' + uuidV4();
+		const service = client.createService(serviceName, {
+			autoStartConsume: false
+		});
+
+		service.handle('serviceMethodClassical', function (data){
+			return data.a + data.b;
+		});
+
+		await service.startConsume();
+
+		const result = await client.request(serviceName, 'serviceMethodClassical', {a: 1, b: 2});
 		if (result === 3){
 			t.pass();
 		} else {
@@ -88,7 +123,8 @@ test('test integration with classical function', async (t) => {
 
 test('test integration with handler error throw', async (t) => {
 	try {
-		const service = client.createService('serviceNameThrow', {
+		const serviceName = 'serviceNameThrow' + uuidV4();
+		const service = client.createService(serviceName, {
 			autoStartConsume: true
 		});
 
@@ -96,7 +132,7 @@ test('test integration with handler error throw', async (t) => {
 			throw new Error('Error !!!!');
 		});
 
-		await t.throws(client.request('serviceNameThrow', 'serviceMethodThrow', {a: 1, b: 2}));
+		await t.throws(client.request(serviceName, 'serviceMethodThrow', {a: 1, b: 2}));
 
 	} catch (e) {
 		t.fail(e);
@@ -107,12 +143,13 @@ test('test integration with handler error throw', async (t) => {
 
 test('test integration with no-handler => timeout throw', async (t) => {
 	try {
-		client.createService('serviceNameThrow2', {
+		const serviceName = 'serviceNameThrow2' + uuidV4();
+		client.createService(serviceName, {
 			autoStartConsume: true
 		});
 
 
-		await t.throws(client.request('serviceNameThrow2', 'serviceMethodThrow2', {a: 1, b: 2}));
+		await t.throws(client.request(serviceName, 'serviceMethodThrow2', {a: 1, b: 2}));
 
 	} catch (e) {
 		t.fail(e);
