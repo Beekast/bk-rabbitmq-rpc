@@ -1,6 +1,6 @@
 {
   "name": "bk-rabbitmq-rpc",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Library for rabbitmq and use rpc service",
   "main": "src/index.js",
   "scripts": {
@@ -40,7 +40,7 @@
   "ava": {
     "files": [
       "src/**/*.spec.js",
-	  "tests/*.js"
+      "tests/*.js"
     ],
     "source": [
       "src/**/*.js"
@@ -54,7 +54,7 @@
   "nyc": {
     "exclude": [
       "src/**/*.spec.js",
-	  "tests/*.js"
+      "tests/*.js"
     ]
   }
 }

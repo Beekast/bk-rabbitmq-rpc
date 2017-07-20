@@ -4,13 +4,11 @@ const RabbitmqRPC = require('../src');
 
 const client = new RabbitmqRPC();
 
-const service = client.createService('my.service.rpc');
-
 
 async function sum (a, b){
 	let result;
 	try {
-		result = await service.request('sum', {a, b});
+		result = await client.request('my.service.rpc', 'sum', {a, b});
 	} catch (err){
 		console.log(err);
 	}

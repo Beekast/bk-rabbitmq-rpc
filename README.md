@@ -26,13 +26,14 @@ const client = new RabbitmqRPC();
 // create a your first service
 const service = client.createService('myFirstService',{ autoStartConsume: true })
 
-// or if you don't use option autoStartConsume for rpc server
-service.startConsume();
-
 // handle a service method on rpc server
 service.handle('myMethod', function(data){
 	return data;
 });
+
+// or if you don't use option autoStartConsume for rpc server
+service.startConsume();
+
 ```
 On RPC Client :
 ```javascript
