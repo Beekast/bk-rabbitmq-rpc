@@ -95,17 +95,21 @@ class RabbitmqRPC {
 		}
 	}
 
-	request (serviceName, method, data) {
+	request (serviceName, method, data, options) {
 		const requestId = uuidV4();
 
 		const content = JSON.stringify(data);
+
+		const {
+			replyTimeout = this._replyTimeout
+		} = options || {};
 
 		return new Promise((resolve, reject) => {
 
 			const timeout = setTimeout( () => {
 				delete this._requests[requestId];
-				return reject( new Error( 'No reply received within the configured timeout of ' + this._replyTimeout + ' ms service : ['+serviceName+'] method : ['+method+']' ) );
-			}, this._replyTimeout );
+				return reject( new Error( 'No reply received within the configured timeout of ' + replyTimeout + ' ms service : ['+serviceName+'] method : ['+method+']' ) );
+			}, replyTimeout );
 
 
 			this._requests[requestId] = (err, data) => {
@@ -131,7 +135,7 @@ class RabbitmqRPC {
 						serviceName,
 						bufferContent,
 						{
-							expiration: this._replyTimeout,
+							expiration: replyTimeout,
 							correlationId: requestId,
 							replyTo: this._responseQueue,
 							type: method
