@@ -121,6 +121,33 @@ test('test integration with start consume function later', async (t) => {
 	}
 });
 
+test('test integration with method find name', async (t) => {
+	try {
+
+		const serviceName = 'serviceNameConsumeLater' + uuidV4();
+		const service = client.createService(serviceName, {
+			autoStartConsume: false
+		});
+
+		service.handle('find', function (data){
+			return data.a + data.b;
+		});
+
+		await service.startConsume();
+
+		const result = await client.request(serviceName, 'find', {a: 1, b: 2});
+		if (result === 3){
+			t.pass();
+		} else {
+			t.fail('bad result');
+		}
+
+	} catch (err){
+		t.fail(err);
+	}
+});
+
+
 test('test integration with handler error throw', async (t) => {
 	try {
 		const serviceName = 'serviceNameThrow' + uuidV4();
