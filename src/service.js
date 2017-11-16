@@ -126,8 +126,9 @@ class Service {
 							channel.sendToQueue(responseQueue, encodedresult, {
 								correlationId: requestId
 							});
+						}).then(() => {
+							channel.ack(message);
 						});
-					channel.ack(message);
 				} else {
 					this._log.debug('did\'nt find handler ' + method + ' to consume :( for service ' + self.serviceName);
 					channel.nack(message);
