@@ -66,7 +66,7 @@ class RabbitmqRPC {
 		}
 
 		return new Promise((resolve, reject) => {
-			Promise.all([this._connection.createExchange()])
+			this._connection.createExchange()
 				.then(() => {
 					return this._requestChannel.then((channel) => {
 						const bufferContent = new Buffer(content);

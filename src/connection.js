@@ -37,7 +37,7 @@ class Connection extends EventEmitter {
 		this.log.info('try to reconnect');
 	}
 
-	_connection () {
+	connection () {
 		if (this.autoReconnect) {
 			this.on('close', this.reconnect);
 		}
@@ -76,7 +76,7 @@ class Connection extends EventEmitter {
 		}
 
 		this.log.info('Connection to ' + this.url);
-		this.connectionPromise = this._connection();
+		this.connectionPromise = this.connection();
 		return this.connectionPromise;
 	}
 
