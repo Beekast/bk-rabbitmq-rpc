@@ -2,8 +2,7 @@ const Connection = require('./connection');
 const Logger = require('./logger');
 const Service = require('./service');
 
-const uuidV4 = require('uuid/v4');
-
+const uuid = require('uuid/v1');
 class RabbitmqRPC {
 	constructor (opts) {
 		const {
@@ -11,22 +10,27 @@ class RabbitmqRPC {
 			logLevel = 'info',
 			logName = 'RabbitmqRPC',
 			exchangeName = 'RabbitmqRPC',
-			responseQueue = true,
 			reconnectDelay = 1000,
 			autoReconnect = true,
-			replyTimeout = 2000,
+			timeout = 10000,
+			replyTimeout,
 			log
 		} =
 			opts || {};
 
-		this._replyTimeout = replyTimeout;
-		this._url = url;
 		this._log =
 			log ||
 			Logger({
 				level: logLevel,
 				name: logName
 			});
+		if (replyTimeout) {
+			this._log.warn('Deprecated replyTimeout option please use timeout instead');
+			this._timeout = replyTimeout;
+		}
+
+		this._timeout = timeout;
+		this._url = url;
 
 		this._connection = new Connection({
 			url,
@@ -43,99 +47,83 @@ class RabbitmqRPC {
 				this._reconnect();
 			});
 		}
-
-		this._requests = [];
-		if (responseQueue) {
-			if (typeof responseQueue === 'boolean') {
-				this._responseQueue = this.exchangeName + '-responseQueue-' + uuidV4();
-			} else {
-				this._responseQueue = responseQueue;
-			}
-			this.createResponseQueue();
-		}
-		this._requestChannel = this._connection.getChannel();
+		// this._requestChannel = this._connection.getChannel();
+		this._requestChannel = this._connection.createRequestChannel();
 	}
 
 	_reconnect () {
-		return setTimeout(() => {
-			this._log.info('reconnect service');
-			this._requestChannel = this._connection.getChannel();
-			if (this._responseQueue) {
-				this.createResponseQueue();
-			}
-		}, this._connection.reconnectDelay);
-	}
-
-	createResponseQueue () {
-		if (this.createResponseQueuePromise) {
-			return this.createResponseQueuePromise;
-		} else {
-			if (this._responseQueue) {
-				// force to have a responseQueue name in case of request without responseQueue
-				this._responseQueue = this._connection.exchangeName + '-responseQueue-' + uuidV4();
-			}
-
-			this.createResponseQueuePromise = this._connection.getChannel().then((channel) => {
-				return channel
-					.assertQueue(this._responseQueue, { durable: false, exclusive: true, autoDelete: true })
-					.then(({ queue }) => {
-						return channel.consume(queue, (message) => {
-							const requestId = message.properties.correlationId;
-							const { err, data } = JSON.parse(message.content.toString());
-							if (requestId && this._requests[requestId]) {
-								this._requests[requestId](err, data);
-							}
-							channel.ack(message);
-						});
-					});
-			});
-			return this.createResponseQueuePromise;
-		}
+		this._log.info('reconstruct request channel');
+		this._requestChannel = this._connection.createRequestChannel();
 	}
 
 	request (serviceName, method, data, options) {
-		const requestId = uuidV4();
-
+		const requestId = uuid();
 		const content = JSON.stringify(data);
-
-		const { replyTimeout = this._replyTimeout } = options || {};
+		let { timeout = this._timeout, replyTimeout } = options || {};
+		if (replyTimeout && timeout === this._timeout) {
+			this._log.warn('Deprecated replyTimeout option please use timeout instead');
+			timeout = replyTimeout;
+		}
 
 		return new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				delete this._requests[requestId];
-				return reject(
-					new Error(
-						'No reply received within the configured timeout of ' +
-							replyTimeout +
-							' ms service : [' +
-							serviceName +
-							'] method : [' +
-							method +
-							']'
-					)
-				);
-			}, replyTimeout);
-
-			this._requests[requestId] = (err, data) => {
-				delete this._requests[requestId];
-				clearTimeout(timeout);
-				if (err) {
-					return reject(new Error(err));
-				}
-				return resolve(data);
-			};
-
-			const bufferContent = new Buffer(content);
-
-			Promise.all([this._connection.createExchange(), this.createResponseQueue()])
+			Promise.all([this._connection.createExchange()])
 				.then(() => {
-					this._requestChannel.then((channel) => {
+					return this._requestChannel.then((channel) => {
+						const bufferContent = new Buffer(content);
 						channel.publish(this._connection.exchangeName, serviceName, bufferContent, {
-							expiration: replyTimeout,
+							expiration: timeout,
 							correlationId: requestId,
-							replyTo: this._responseQueue,
+							replyTo: this._connection.replyQueue,
 							type: method
 						});
+
+						const requestTimeout = setTimeout(() => {
+							setImmediate(() => {
+								const erreurMsg =
+									'No reply received within the configured timeout of ' +
+									timeout +
+									' ms service : [' +
+									serviceName +
+									'] method : [' +
+									method +
+									']';
+								channel.responseEmitter.emit(requestId, { err: erreurMsg });
+							});
+						}, timeout);
+
+						channel.responseEmitter.once(requestId, ({ err, data }) => {
+							clearTimeout(requestTimeout);
+							if (err) {
+								return reject(new Error(err));
+							}
+							return resolve(data);
+						});
+					});
+				})
+				.catch((err) => {
+					this._log.error(err);
+					return reject(err);
+				});
+		});
+	}
+
+	apply (serviceName, method, data, options) {
+		const content = JSON.stringify(data);
+		const { timeout } = options || {};
+
+		return new Promise((resolve, reject) => {
+			Promise.all([this._connection.createExchange()])
+				.then(() => {
+					return this._requestChannel.then((channel) => {
+						const bufferContent = new Buffer(content);
+						const messageOptions = {
+							type: method
+						};
+						if (timeout) {
+							messageOptions.expiration = timeout;
+						}
+						channel.publish(this._connection.exchangeName, serviceName, bufferContent, messageOptions);
+						resolve();
 					});
 				})
 				.catch((err) => {

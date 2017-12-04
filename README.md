@@ -61,7 +61,7 @@ Return a new RabbitmqRPC client.
  * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
  * `autoReconnect` : Enable autoReconnect option (default `true`)
  * `responseQueue` : If `true`, the responseQueue will be generated, it's possible to use a string to define. Use `false` for no responseQueue (default : `true`)
-* `replyTimeout` : Timeout for rpc request in ms (default : `2000`)
+* `timeout` : Timeout for rpc request in ms (default : `10000`)
 
 ### {client} request(serviceName, method, data, options)
 Request a method on a service.
@@ -69,7 +69,16 @@ Request a method on a service.
 * `method` is the method name, you have to use alphanum string for the method name.
 * `data` is the data send to the client.
 * `options` options for the request with the following properties :
-	* `replyTimeout` : specify timeout for rpc request in ms. Defautlt is the time specify in the constructor.
+	* `timeout` : specify timeout for rpc request in ms. Defautlt is the time specify in the constructor.
+This function return a Promise.
+
+### {client} apply(serviceName, method, data, options)
+Request a method on a service but without response.
+* `serviceName` string for the service name.
+* `method` is the method name, you have to use alphanum string for the method name.
+* `data` is the data send to the client.
+* `options` options for the request with the following properties :
+	* `timeout` : specify timeout for rpc request in ms. Warning : defautlt is no timeout !
 
 This function return a Promise.
 
@@ -78,6 +87,7 @@ Return a service object
 * `serviceName` string for the service name.
 * `options` are :
 	* `autoStartConsume` : If the service start to consume RPC message at the beginning (default : `false`)
+	* `limit` : Concurent limit request for the service. By default there is no limit.
 
 ### {service} handle(method,function(data) {})
 Handle a method for the service.
@@ -89,7 +99,6 @@ Handle a method for the service.
 ## Contributing
 
 First off, thanks for your interest and for wanting to contribute!
-PRs with insufficient coverage, broken tests or deviation from the style will not be accepted.
 
 ### Run tests
 

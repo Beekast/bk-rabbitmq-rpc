@@ -35,42 +35,6 @@ test('test instance with custom args', (t) => {
 	}
 });
 
-test('test instance with custom responsequeue name', (t) => {
-	try {
-		const opts = {
-			url: 'amqp://guest:guest@127.0.0.1:5672/',
-			responseQueue: 'customresponseQueue'
-		};
-		const client = new RabbitmqRPC(opts);
-		if (client._responseQueue){
-			t.pass('ok');
-		} else {
-			t.fail('bad responseQueue param');
-		}
-	} catch (err){
-		t.fail(err);
-	}
-});
-
-
-test('test instance without responsequeue', (t) => {
-	try {
-		const opts = {
-			url: 'amqp://guest:guest@127.0.0.1:5672/',
-			responseQueue: false
-		};
-		const client = new RabbitmqRPC(opts);
-		if (!client._responseQueue){
-			t.pass('ok');
-		} else {
-			t.fail('bad responseQueue param');
-		}
-	} catch (err){
-		t.fail(err);
-	}
-});
-
-
 test('test create Service', (t) => {
 	try {
 		const client = new RabbitmqRPC();
