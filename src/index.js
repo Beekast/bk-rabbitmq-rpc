@@ -13,18 +13,24 @@ class RabbitmqRPC {
 			reconnectDelay = 1000,
 			autoReconnect = true,
 			timeout = 10000,
+			replyTimeout,
 			log
 		} =
 			opts || {};
 
-		this._timeout = timeout;
-		this._url = url;
 		this._log =
 			log ||
 			Logger({
 				level: logLevel,
 				name: logName
 			});
+		if (replyTimeout) {
+			this._log.warn('Deprecated replyTimeout option please use timeout instead');
+			this._timeout = replyTimeout;
+		}
+
+		this._timeout = timeout;
+		this._url = url;
 
 		this._connection = new Connection({
 			url,
@@ -53,7 +59,11 @@ class RabbitmqRPC {
 	request (serviceName, method, data, options) {
 		const requestId = uuid();
 		const content = JSON.stringify(data);
-		const { timeout = this._timeout } = options || {};
+		let { timeout = this._timeout, replyTimeout } = options || {};
+		if (replyTimeout && timeout === this._timeout) {
+			this._log.warn('Deprecated replyTimeout option please use timeout instead');
+			timeout = replyTimeout;
+		}
 
 		return new Promise((resolve, reject) => {
 			Promise.all([this._connection.createExchange()])
@@ -100,6 +110,7 @@ class RabbitmqRPC {
 	apply (serviceName, method, data, options) {
 		const content = JSON.stringify(data);
 		const { timeout } = options || {};
+
 		return new Promise((resolve, reject) => {
 			Promise.all([this._connection.createExchange()])
 				.then(() => {

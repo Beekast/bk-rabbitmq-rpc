@@ -13,7 +13,9 @@ let requestFailed = 0;
 
 async function sum (a, b){
 	const start = Date.now();
-	const result = await client.request('my.service.rpc', 'sum', {a, b});
+	const result = await client.request('my.service.rpc', 'sum', {a, b}, {
+		replyTimeout: 2000
+	});
 	//console.log(result);
 	const ms = Date.now() - start;
 	console.log(`${a} ${b} - ${ms} ms`);
