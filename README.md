@@ -59,7 +59,6 @@ Return a new RabbitmqRPC client.
  * `exchangeName` : Exchange name for handle RPC request  (default : `RabbitmqRPC`)
  * `log` : Custom log instance (require to implement function trace, debug, info, warn and error)
  * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
- * `autoReconnect` : Enable autoReconnect option (default `true`)
  * `responseQueue` : If `true`, the responseQueue will be generated, it's possible to use a string to define. Use `false` for no responseQueue (default : `true`)
 * `timeout` : Timeout for rpc request in ms (default : `10000`)
 

@@ -11,7 +11,6 @@ class RabbitmqRPC {
 			logName = 'RabbitmqRPC',
 			exchangeName = 'RabbitmqRPC',
 			reconnectDelay = 1000,
-			autoReconnect = true,
 			timeout = 10000,
 			replyTimeout,
 			log
@@ -32,28 +31,25 @@ class RabbitmqRPC {
 		this._timeout = timeout;
 		this._url = url;
 
-		this._connection = new Connection({
+		this._connectionOptions = {
 			url,
 			log: this._log,
 			exchangeName,
-			reconnectDelay,
-			autoReconnect
-		});
+			reconnectDelay
+		};
+
+		this._connection = new Connection(Object.assign(this._connectionOptions, {name: 'requestConnection'}));
 
 		// autoReconnect exchange;
-		if (this._connection.autoReconnect) {
-			// on channel close restart consumer and responseQueue
-			this._connection.on('close', () => {
-				this._reconnect();
-			});
-		}
-		// this._requestChannel = this._connection.getChannel();
-		this._requestChannel = this._connection.createRequestChannel();
+		this._connection.on('close', () => {
+			this._reconnect();
+		});
+		this._requestChannel = this._connection.newRequestChannel();
 	}
 
 	_reconnect () {
 		this._log.info('reconstruct request channel');
-		this._requestChannel = this._connection.createRequestChannel();
+		this._requestChannel = this._connection.newRequestChannel();
 	}
 
 	request (serviceName, method, data, options) {
@@ -112,7 +108,7 @@ class RabbitmqRPC {
 		const { timeout } = options || {};
 
 		return new Promise((resolve, reject) => {
-			Promise.all([this._connection.createExchange()])
+			this._connection.createExchange()
 				.then(() => {
 					return this._requestChannel.then((channel) => {
 						const bufferContent = new Buffer(content);
@@ -123,7 +119,7 @@ class RabbitmqRPC {
 							messageOptions.expiration = timeout;
 						}
 						channel.publish(this._connection.exchangeName, serviceName, bufferContent, messageOptions);
-						resolve();
+						return resolve();
 					});
 				})
 				.catch((err) => {
@@ -134,7 +130,7 @@ class RabbitmqRPC {
 	}
 
 	createService (name, opts) {
-		return new Service(name, opts, this._connection, this._log);
+		return new Service(name, opts, this._connectionOptions, this._log);
 	}
 }
 
