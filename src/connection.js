@@ -9,8 +9,8 @@ class Connection extends EventEmitter {
 			log,
 			exchangeName,
 			autoCreateExchange = true,
-			autoReconnect = true,
-			reconnectDelay = 1000
+			reconnectDelay = 1000,
+			name = 'connection'
 		} =
 			opts || {};
 
@@ -22,25 +22,19 @@ class Connection extends EventEmitter {
 			throw new Error('need to define exchangeName');
 		}
 		this.reconnectDelay = reconnectDelay;
-		this.autoReconnect = autoReconnect;
 		this.exchangeName = exchangeName;
 		this.log = log;
 		this.url = url;
+		this.name = name;
+
+		this.replyQueue = 'amq.rabbitmq.reply-to';
 
 		if (autoCreateExchange) {
 			this.createExchange();
 		}
-		this.replyQueue = 'amq.rabbitmq.reply-to';
 	}
 
-	reconnect () {
-		this.log.info('try to reconnect');
-	}
-
-	connection () {
-		if (this.autoReconnect) {
-			this.on('close', this.reconnect);
-		}
+	_connection () {
 		return new Promise((resolve, reject) => {
 			amqp
 				.connect(this.url)
@@ -59,13 +53,9 @@ class Connection extends EventEmitter {
 				})
 				.catch((err) => {
 					this.log.error(err);
-					if (this.autoReconnect) {
-						return setTimeout(() => {
-							return resolve(Promise.resolve(this.connection()));
-						}, this.reconnectDelay);
-					} else {
-						return reject(err);
-					}
+					return setTimeout(() => {
+						return resolve(Promise.resolve(this._connection()));
+					}, this.reconnectDelay);
 				});
 		});
 	}
@@ -76,27 +66,25 @@ class Connection extends EventEmitter {
 		}
 
 		this.log.info('Connection to ' + this.url);
-		this.connectionPromise = this.connection();
+		this.connectionPromise = this._connection();
 		return this.connectionPromise;
 	}
 
-	createRequestChannel () {
+	newRequestChannel () {
 		return new Promise((resolve, reject) => {
-			this.getConnection()
-				.then((conn) => {
-					conn.createChannel().then((channel) => {
-						channel.responseEmitter = new EventEmitter();
-						channel.responseEmitter.setMaxListeners(0);
-						channel.consume(
-							this.replyQueue,
-							(msg) => {
-								const content = JSON.parse(msg.content.toString());
-								channel.responseEmitter.emit(msg.properties.correlationId, content);
-							},
-							{ noAck: true }
-						);
-						return resolve(channel);
-					});
+			this.newChannel()
+				.then((channel) => {
+					channel.responseEmitter = new EventEmitter();
+					channel.responseEmitter.setMaxListeners(0);
+					channel.consume(
+						this.replyQueue,
+						(msg) => {
+							const content = JSON.parse(msg.content.toString());
+							channel.responseEmitter.emit(msg.properties.correlationId, content);
+						},
+						{ noAck: true }
+					);
+					return resolve(channel);
 				})
 				.catch((err) => {
 					return reject(err);
@@ -104,7 +92,7 @@ class Connection extends EventEmitter {
 		});
 	}
 
-	getChannel () {
+	newChannel () {
 		return new Promise((resolve, reject) => {
 			this.getConnection()
 				.then((conn) => {
@@ -123,7 +111,7 @@ class Connection extends EventEmitter {
 			return this.createExchangePromise;
 		} else {
 			this.createExchangePromise = new Promise((resolve, reject) => {
-				this.getChannel()
+				this.newChannel()
 					.then((channel) => {
 						this.log.info('Try to create exchange ' + this.exchangeName);
 						channel

@@ -1,5 +1,7 @@
+const Connection = require('./connection');
+
 class Service {
-	constructor (serviceName, opts, connection, log) {
+	constructor (serviceName, opts, connectionOptions, log) {
 		const { autoCreateQueue = true, autoStartConsume = false, limit = false } = opts || {};
 
 		this._handler = {};
@@ -10,23 +12,21 @@ class Service {
 		if (!serviceName) {
 			throw new Error('you must provide a service name');
 		}
-
 		this.serviceName = serviceName;
-		this.serviceQueueName = connection.exchangeName + '.' + serviceName;
+		this.serviceQueueName = connectionOptions.exchangeName + '.' + serviceName;
 
-		if (!connection) {
-			throw new Error('no connection provide');
-		}
+		this._connectionOptions = connectionOptions;
 
-		this.connection = connection;
+		this._consumeConnection = new Connection(Object.assign(this._connectionOptions, {name: 'consumeConnection'}));
+		this._consumeConnection.on('close', () => {
+			this._reconnectConsume();
+		});
 
-		// autoReconnect exchange;
-		if (this.connection.autoReconnect) {
-			// on channel close restart consumer
-			this.connection.on('close', () => {
-				this.reconnect();
-			});
-		}
+		this._responseConnection = new Connection(Object.assign(this._connectionOptions, {name: 'responseConnection'}));
+
+		this._responseConnection.on('close', () => {
+			this._reconnectResponse();
+		});
 
 		// Create queue for service
 		if (autoCreateQueue) {
@@ -36,15 +36,21 @@ class Service {
 				}
 			});
 		}
+
+		if (autoStartConsume) {
+			this.startConsume();
+		}
+
+		this.responseChannel = this._responseConnection.newChannel();
 	}
 
 	createQueue () {
 		if (this.createQueuePromise) {
 			return this.createQueuePromise;
 		} else {
-			this.createQueuePromise = this.connection.getChannel().then((channel) => {
+			this.createQueuePromise = this._consumeConnection.newChannel().then((channel) => {
 				return channel.assertQueue(this.serviceQueueName, { durable: true }).then(({ queue }) => {
-					return channel.bindQueue(queue, this.connection.exchangeName, this.serviceName).then(() => {
+					return channel.bindQueue(queue, this._consumeConnection.exchangeName, this.serviceName).then(() => {
 						channel.close();
 					});
 				});
@@ -60,18 +66,23 @@ class Service {
 		this._handler[method] = callback;
 	}
 
-	reconnect () {
-		this.consumePromise = null;
-		this._log.info('reconnect service');
+	_reconnectConsume () {
+		this._log.info('reconnect consume service');
+		this._consumePromise = null;
 		if (this.isConsumerStarted) {
 			this.startConsume();
 		}
 	}
 
+	_reconnectResponse () {
+		this._log.info('reconnect reponse service');
+		this.responseChannel = this._responseConnection.newChannel();
+	}
+
 	_consume () {
 		this._log.debug('start to consume service ' + this.serviceName);
 		const self = this;
-		return this.connection.getChannel().then((channel) => {
+		return this._consumeConnection.newChannel().then((channel) => {
 			return channel.prefetch(this.limit).then(() => {
 				return channel.consume(this.serviceQueueName, (message) => {
 					this._log.debug(message.properties);
@@ -111,20 +122,20 @@ class Service {
 								);
 							})
 							.then(() => {
-								process.nextTick(() => {
-									if (responseQueue) {
+								if (responseQueue) {
+									this.responseChannel.then((channel) => {
 										channel.publish('', responseQueue, encodedresult, {
 											correlationId: requestId
 										});
-									}
-									channel.ack(message);
-								});
+									});
+								}
+								channel.ack(message);
 							});
 					} else {
 						this._log.debug("did'nt find handler " + method + ' to consume :( for service ' + self.serviceName);
 						channel.nack(message);
 					}
-				});
+				}, { noAck: false });
 			});
 		});
 	}
@@ -132,13 +143,13 @@ class Service {
 	startConsume () {
 		this.isConsumerStarted = true;
 		const self = this;
-		if (this.consumePromise) {
-			return this.consumePromise;
+		if (this._consumePromise) {
+			return this._consumePromise;
 		} else {
-			this.consumePromise = this.createQueue().then(() => {
+			this._consumePromise = this.createQueue().then(() => {
 				return self._consume();
 			});
-			return this.consumePromise;
+			return this._consumePromise;
 		}
 	}
 }

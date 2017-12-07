@@ -4,7 +4,7 @@ const RabbitmqRPC = require('../src');
 
 const client = new RabbitmqRPC();
 
-let totalRequest = 20000;
+let totalRequest = 100000000;
 
 let requestPass = 0;
 let requestFailed = 0;
@@ -13,8 +13,8 @@ let requestFailed = 0;
 
 async function sum (a, b){
 	const start = Date.now();
-	const result = await client.request('my.service.rpc', 'sum', {a, b});
-	//console.log(result);
+	const result = await client.request('my.service.rpc', 'sum', {a, b}, {timeout: 2000});
+	console.log(result);
 	const ms = Date.now() - start;
 	console.log(`${a} ${b} - ${ms} ms`);
 	return result;
@@ -22,7 +22,9 @@ async function sum (a, b){
 }
 
 async function run (){
-	const promisedBuffer = [];
+	// await sum(1, 1);
+	// const start = Date.now();
+	// const promisedBuffer = [];
 	// for (let i = 0; i < totalRequest; i++){
 	// 	console.log('Iteration ', i);
 	// 	promisedBuffer.push(
@@ -41,6 +43,8 @@ async function run (){
 	// console.log('######### End');
 	// console.log('Request pass= ', requestPass);
 	// console.log('Request failed= ', requestFailed);
+	// const ms = Date.now() - start;
+	// console.log('#### total time '+ms+ 'ms');
 
 	for (let i = 0; i < totalRequest; i++){
 		try{
