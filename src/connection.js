@@ -9,8 +9,7 @@ class Connection extends EventEmitter {
 			log,
 			exchangeName,
 			autoCreateExchange = true,
-			reconnectDelay = 1000,
-			name = 'connection'
+			reconnectDelay = 1000
 		} =
 			opts || {};
 
@@ -25,7 +24,6 @@ class Connection extends EventEmitter {
 		this.exchangeName = exchangeName;
 		this.log = log;
 		this.url = url;
-		this.name = name;
 
 		this.replyQueue = 'amq.rabbitmq.reply-to';
 
@@ -37,7 +35,7 @@ class Connection extends EventEmitter {
 	_connection () {
 		return new Promise((resolve, reject) => {
 			amqp
-				.connect(this.url)
+				.connect(this.url, {noDelay: true})
 				.then((connection) => {
 					connection.on('close', () => {
 						this.connectionPromise = null;

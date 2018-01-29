@@ -38,7 +38,7 @@ class RabbitmqRPC {
 			reconnectDelay
 		};
 
-		this._connection = new Connection(Object.assign(this._connectionOptions, {name: 'requestConnection'}));
+		this._connection = new Connection(this._connectionOptions);
 
 		// autoReconnect exchange;
 		this._connection.on('close', () => {
@@ -130,7 +130,7 @@ class RabbitmqRPC {
 	}
 
 	createService (name, opts) {
-		return new Service(name, opts, this._connectionOptions, this._log);
+		return new Service(name, opts, this._connection, this._log);
 	}
 }
 
