@@ -129,13 +129,21 @@ class Service {
 											});
 										});
 									}
-									channel.ack(message);
+									try {
+										channel.ack(message);
+									} catch (err) {
+										this._log.error(err);
+									}
 								});
 						} else {
 							this._log.debug(
 								"did'nt find handler " + method + ' to consume :( for service ' + self.serviceName
 							);
-							channel.nack(message);
+							try {
+								channel.nack(message);
+							} catch (err) {
+								this._log.error(err);
+							}
 						}
 					},
 					{ noAck: false }
