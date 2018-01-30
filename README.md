@@ -7,6 +7,7 @@ This is a very opinionated abstraction over amqplib to help simplify the impleme
 ### Features:
  * Creation of RPC services (client & server)
  * Attempt to gracefully handle lost connections and channels
+ * Connections have a backoff policy of exponential delay randomized: ~1s, ~2s, ~4s, ~8s then stable at ~8s, ~8s...
 
 ## Installation
 
@@ -58,7 +59,6 @@ Return a new RabbitmqRPC client.
  * `logName` : Log name for Bunyan = (default : `RabbitmqRPC`)
  * `exchangeName` : Exchange name for handle RPC request  (default : `RabbitmqRPC`)
  * `log` : Custom log instance (require to implement function trace, debug, info, warn and error)
- * `reconnectDelay` : Delay in ms before reconnect on connection close (default `1000`)
  * `responseQueue` : If `true`, the responseQueue will be generated, it's possible to use a string to define. Use `false` for no responseQueue (default : `true`)
 * `timeout` : Timeout for rpc request in ms (default : `10000`)
 

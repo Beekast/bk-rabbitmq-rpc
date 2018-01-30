@@ -10,7 +10,6 @@ class RabbitmqRPC {
 			logLevel = 'info',
 			logName = 'RabbitmqRPC',
 			exchangeName = 'RabbitmqRPC',
-			reconnectDelay = 1000,
 			timeout = 10000,
 			replyTimeout,
 			log
@@ -34,11 +33,10 @@ class RabbitmqRPC {
 		this._connectionOptions = {
 			url,
 			log: this._log,
-			exchangeName,
-			reconnectDelay
+			exchangeName
 		};
 
-		this._connection = new Connection(Object.assign(this._connectionOptions, {name: 'requestConnection'}));
+		this._connection = new Connection(this._connectionOptions);
 
 		// autoReconnect exchange;
 		this._connection.on('close', () => {
@@ -62,7 +60,8 @@ class RabbitmqRPC {
 		}
 
 		return new Promise((resolve, reject) => {
-			this._connection.createExchange()
+			this._connection
+				.createExchange()
 				.then(() => {
 					return this._requestChannel.then((channel) => {
 						const bufferContent = new Buffer(content);
@@ -108,7 +107,8 @@ class RabbitmqRPC {
 		const { timeout } = options || {};
 
 		return new Promise((resolve, reject) => {
-			this._connection.createExchange()
+			this._connection
+				.createExchange()
 				.then(() => {
 					return this._requestChannel.then((channel) => {
 						const bufferContent = new Buffer(content);
@@ -130,7 +130,7 @@ class RabbitmqRPC {
 	}
 
 	createService (name, opts) {
-		return new Service(name, opts, this._connectionOptions, this._log);
+		return new Service(name, opts, this._connection, this._log);
 	}
 }
 

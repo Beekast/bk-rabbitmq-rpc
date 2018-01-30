@@ -11,10 +11,10 @@ const service = client.createService('my.service.rpc', {
 
 function sum(a, b){
 	return new Promise((resolve) => {
-		// setTimeout(() => {
-		// 	return resolve(a+b);
-		// }, 5000);
-		resolve(a+b);
+		setTimeout(() => {
+			return resolve(a+b);
+		}, 1000);
+		//resolve(a+b);
 	});
 }
 

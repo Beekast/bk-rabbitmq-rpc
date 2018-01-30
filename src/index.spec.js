@@ -7,30 +7,29 @@ const bunyan = require('bunyan');
 test('test instance with default args', (t) => {
 	try {
 		const client = new RabbitmqRPC();
-		if (client._url === 'amqp://guest:guest@localhost:5672/'){
+		if (client._url === 'amqp://guest:guest@localhost:5672/') {
 			t.pass('ok');
 		} else {
 			t.fail('bad rabbitmq URL');
 		}
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
-
 
 test('test instance with custom args', (t) => {
 	try {
 		const opts = {
 			url: 'amqp://guest:guest@127.0.0.1:5672/',
-			log: bunyan.createLogger({name: 'newTest'})
+			log: bunyan.createLogger({ name: 'newTest' })
 		};
 		const client = new RabbitmqRPC(opts);
-		if (client._url === opts.url){
+		if (client._url === opts.url) {
 			t.pass('ok');
 		} else {
 			t.fail('bad rabbitmq URL');
 		}
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
@@ -39,7 +38,7 @@ test('test create Service', (t) => {
 	try {
 		const client = new RabbitmqRPC();
 		client.createService('testService');
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
@@ -50,7 +49,7 @@ test('test failed create Service without name', (t) => {
 		t.throws(() => {
 			client.createService();
 		});
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
