@@ -6,15 +6,15 @@ const bunyan = require('bunyan');
 test((t) => {
 	try {
 		const conn = new Connection({
-			log: bunyan.createLogger({name: 'testConnection'}),
+			log: bunyan.createLogger({ name: 'testConnection' }),
 			exchangeName: 'RabbitmqRPC'
 		});
-		if (conn.url === 'amqp://guest:guest@localhost:5672/'){
+		if (conn.url === 'amqp://guest:guest@localhost:5672/') {
 			t.pass('ok');
 		} else {
 			t.fail('bad rabbitmq URL');
 		}
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
@@ -29,7 +29,7 @@ test((t) => {
 // throw without exchangeName
 test((t) => {
 	const opts = {
-		log: bunyan.createLogger({name: 'testConnection'})
+		log: bunyan.createLogger({ name: 'testConnection' })
 	};
 	t.throws(() => {
 		new Connection(opts);
@@ -41,26 +41,25 @@ test((t) => {
 	try {
 		const opts = {
 			url: 'amqp://guest:guest@127.0.0.1:5672/',
-			log: bunyan.createLogger({name: 'newTest'}),
+			log: bunyan.createLogger({ name: 'newTest' }),
 			exchangeName: 'RabbitmqRPC'
 		};
 		const conn = new Connection(opts);
-		if (conn.url === opts.url){
+		if (conn.url === opts.url) {
 			t.pass('ok');
 		} else {
 			t.fail('bad rabbitmq URL');
 		}
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
-
 
 // test connection
 test(async (t) => {
 	try {
 		const opts = {
-			log: bunyan.createLogger({name: 'testConnection'}),
+			log: bunyan.createLogger({ name: 'testConnection' }),
 			exchangeName: 'RabbitmqRPC'
 		};
 		const conn = new Connection(opts);
@@ -68,7 +67,7 @@ test(async (t) => {
 		// test twice to control not open a new connection
 		await conn.getConnection();
 		t.pass();
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
@@ -77,7 +76,7 @@ test(async (t) => {
 test(async (t) => {
 	try {
 		const opts = {
-			log: bunyan.createLogger({name: 'testConnection'}),
+			log: bunyan.createLogger({ name: 'testConnection' }),
 			exchangeName: 'RabbitmqRPC',
 			autoCreateExchange: false
 		};
@@ -86,7 +85,7 @@ test(async (t) => {
 		// test twice to control not create type twice
 		await conn.createExchange();
 		t.pass();
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
