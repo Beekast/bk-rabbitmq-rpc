@@ -4,16 +4,15 @@ const bunyan = require('bunyan');
 const Service = require('./service');
 const Connection = require('./connection');
 
-
 let connection;
 test.before((t) => {
 	try {
 		connection = new Connection({
 			exchangeName: 'testService',
-			log: bunyan.createLogger({name: 'testService'})
+			log: bunyan.createLogger({ name: 'testService' })
 		});
 		t.pass('ok');
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
@@ -22,54 +21,71 @@ test('test instance with default args', (t) => {
 	try {
 		new Service('test', null, connection, connection.log);
 		t.pass('ok');
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
 
-
 test('test failed without service name', (t) => {
 	try {
-		new Service(null, {
-			autoCreateQueue: false
-		}, connection, connection.log);
+		new Service(
+			null,
+			{
+				autoCreateQueue: false
+			},
+			connection,
+			connection.log
+		);
 		t.fail('have to failed without a service name');
-	} catch (err){
+	} catch (err) {
 		t.pass('ok');
 	}
 });
 
 test('test failed without connection', (t) => {
 	try {
-		new Service('test', {
-			autoCreateQueue: false
-		}, null, connection.log);
+		new Service(
+			'test',
+			{
+				autoCreateQueue: false
+			},
+			null,
+			connection.log
+		);
 		t.fail('have to failed without connection');
-	} catch (err){
+	} catch (err) {
 		t.pass('ok');
 	}
 });
 
-
 test('test create queue', async (t) => {
 	try {
-		const service = new Service('newService', {
-			autoCreateQueue: false
-		}, connection, connection.log);
+		const service = new Service(
+			'newService',
+			{
+				autoCreateQueue: false
+			},
+			connection,
+			connection.log
+		);
 		await service.createQueue();
 		await service.createQueue();
 		t.pass('ok');
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });
 
-
 test('throw on redifined handler', (t) => {
 	try {
-		const service = new Service('newService', {
-			autoCreateQueue: false
-		}, connection, connection.log);
+		const service = new Service(
+			'newService',
+			{
+				autoCreateQueue: false
+			},
+			connection,
+			connection.log
+		);
 		service.handle('redifined', () => {
 			return null;
 		});
@@ -79,7 +95,7 @@ test('throw on redifined handler', (t) => {
 			});
 		});
 		t.pass('ok');
-	} catch (err){
+	} catch (err) {
 		t.fail(err);
 	}
 });

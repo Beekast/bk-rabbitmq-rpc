@@ -1,16 +1,11 @@
 const amqp = require('amqplib');
+const backoff = require('backoff');
 const EventEmitter = require('events');
 
 class Connection extends EventEmitter {
 	constructor (opts) {
 		super();
-		const {
-			url = 'amqp://guest:guest@localhost:5672/',
-			log,
-			exchangeName,
-			autoCreateExchange = true,
-			reconnectDelay = 1000
-		} =
+		const { url = 'amqp://guest:guest@localhost:5672/', log, exchangeName, autoCreateExchange = true } =
 			opts || {};
 
 		if (!log) {
@@ -20,7 +15,6 @@ class Connection extends EventEmitter {
 		if (!exchangeName) {
 			throw new Error('need to define exchangeName');
 		}
-		this.reconnectDelay = reconnectDelay;
 		this.exchangeName = exchangeName;
 		this.log = log;
 		this.url = url;
@@ -33,28 +27,47 @@ class Connection extends EventEmitter {
 	}
 
 	_connection () {
-		return new Promise((resolve, reject) => {
-			amqp
-				.connect(this.url, {noDelay: true})
-				.then((connection) => {
-					connection.on('close', () => {
-						this.connectionPromise = null;
-						this.log.info('Connection close');
-						this.emit('close');
+		return new Promise((resolve) => {
+			let boff = backoff.exponential({
+				randomisationFactor: 0.2,
+				initialDelay: 1000,
+				maxDelay: 8000
+			});
+
+			boff.on('backoff', (number, delay) => {
+				this.log.info(`BK-RPC - Connection trial #${number} : waiting for ${delay} ms...'`);
+				if (number === 10) {
+					this.log.warn('BK-RPC - WARNING: 10 CONNECTION RETRIES');
+				} else if (number === 100) {
+					this.log.warn('BK-RPC - WARNING: 100 CONNECTION RETRIES');
+				}
+			});
+
+			boff.on('ready', (number) => {
+				this.log.info(`BK-RPC - Connection trial #${number}; connecting...`);
+				amqp
+					.connect(this.url, { noDelay: true })
+					.then((connection) => {
+						connection.on('close', () => {
+							this.connectionPromise = null;
+							this.log.info('BK-RPC - Connection closed');
+							this.emit('close');
+						});
+						connection.on('error', (err) => {
+							this.log.error(`BK-RPC - Connection error: ${err}`);
+							this.emit('error', err);
+						});
+						this.log.info(`BK-RPC - Connection trial #${number}; connected to ${this.url}`);
+						boff.reset();
+						return resolve(connection);
+					})
+					.catch((err) => {
+						this.log.error(`BK-RPC - Connection trial #${number}; failed: ${err}`);
+						boff.backoff();
 					});
-					connection.on('error', (err) => {
-						this.log.error(err);
-						this.emit('error', err);
-					});
-					this.log.info('Connected to ' + this.url);
-					return resolve(connection);
-				})
-				.catch((err) => {
-					this.log.error(err);
-					return setTimeout(() => {
-						return resolve(Promise.resolve(this._connection()));
-					}, this.reconnectDelay);
-				});
+			});
+
+			boff.backoff();
 		});
 	}
 
@@ -63,7 +76,7 @@ class Connection extends EventEmitter {
 			return this.connectionPromise;
 		}
 
-		this.log.info('Connection to ' + this.url);
+		this.log.info(`BK-RPC - Get connection to ${this.url}`);
 		this.connectionPromise = this._connection();
 		return this.connectionPromise;
 	}
@@ -111,14 +124,14 @@ class Connection extends EventEmitter {
 			this.createExchangePromise = new Promise((resolve, reject) => {
 				this.newChannel()
 					.then((channel) => {
-						this.log.info('Try to create exchange ' + this.exchangeName);
+						this.log.info('BK-RPC - Try to create exchange ' + this.exchangeName);
 						channel
 							.assertExchange(this.exchangeName, 'topic', {
 								durable: true,
 								autoDelete: false
 							})
 							.then(() => {
-								this.log.info('Successfuly create exchange ' + this.exchangeName);
+								this.log.info('BK-RPC - Successfuly create exchange ' + this.exchangeName);
 								channel.close();
 								return resolve();
 							});
