@@ -3,7 +3,7 @@ const backoff = require('backoff');
 const EventEmitter = require('events');
 
 class Connection extends EventEmitter {
-	constructor (opts) {
+	constructor (opts, name) {
 		super();
 		const { url = 'amqp://guest:guest@localhost:5672/', log, exchangeName, autoCreateExchange = true } =
 			opts || {};
@@ -18,6 +18,7 @@ class Connection extends EventEmitter {
 		this.exchangeName = exchangeName;
 		this.log = log;
 		this.url = url;
+		this.name = name || 'default';
 
 		this.replyQueue = 'amq.rabbitmq.reply-to';
 
@@ -35,7 +36,7 @@ class Connection extends EventEmitter {
 			});
 
 			boff.on('backoff', (number, delay) => {
-				this.log.info(`BK-RPC - Connection trial #${number} : waiting for ${delay} ms...'`);
+				this.log.info(`BK-RPC - Connection ${this.name} trial #${number} : waiting for ${delay} ms...'`);
 				if (number === 10) {
 					this.log.warn('BK-RPC - WARNING: 10 CONNECTION RETRIES');
 				} else if (number === 100) {
@@ -44,25 +45,25 @@ class Connection extends EventEmitter {
 			});
 
 			boff.on('ready', (number) => {
-				this.log.info(`BK-RPC - Connection trial #${number}; connecting...`);
+				this.log.info(`BK-RPC - Connection ${this.name} trial #${number}; connecting...`);
 				amqp
 					.connect(this.url, { noDelay: true })
 					.then((connection) => {
 						connection.on('close', () => {
 							this.connectionPromise = null;
-							this.log.info('BK-RPC - Connection closed');
+							this.log.info(`BK-RPC - Connection ${this.name} closed`);
 							this.emit('close');
 						});
 						connection.on('error', (err) => {
-							this.log.error(`BK-RPC - Connection error: ${err}`);
+							this.log.error(`BK-RPC - Connection ${this.name} error: ${err}`, err);
 							this.emit('error', err);
 						});
-						this.log.info(`BK-RPC - Connection trial #${number}; connected to ${this.url}`);
+						this.log.info(`BK-RPC - Connection ${this.name} trial #${number}; connected to ${this.url}`);
 						boff.reset();
 						return resolve(connection);
 					})
 					.catch((err) => {
-						this.log.error(`BK-RPC - Connection trial #${number}; failed: ${err}`);
+						this.log.error(`BK-RPC - Connection ${this.name} trial #${number}; failed: ${err}`, err);
 						boff.backoff();
 					});
 			});
@@ -76,7 +77,7 @@ class Connection extends EventEmitter {
 			return this.connectionPromise;
 		}
 
-		this.log.info(`BK-RPC - Get connection to ${this.url}`);
+		this.log.info(`BK-RPC - Get connection ${this.name} to ${this.url}`);
 		this.connectionPromise = this._connection();
 		return this.connectionPromise;
 	}

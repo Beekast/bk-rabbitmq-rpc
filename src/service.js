@@ -1,5 +1,6 @@
+const Connection = require('./connection');
 class Service {
-	constructor (serviceName, opts, connection, log) {
+	constructor (serviceName, opts, connectionOptions, log) {
 		const { autoCreateQueue = true, autoStartConsume = false, limit = false } = opts || {};
 
 		this._handler = {};
@@ -11,10 +12,18 @@ class Service {
 			throw new Error('you must provide a service name');
 		}
 		this.serviceName = serviceName;
-		this.serviceQueueName = connection.exchangeName + '.' + serviceName;
-		this._connection = connection;
-		this._connection.on('close', () => {
-			this._reconnect();
+		this.serviceQueueName = connectionOptions.exchangeName + '.' + serviceName;
+		this._connectionOptions = connectionOptions;
+		this._consumeConnection = new Connection(this._connectionOptions, 'consumeConnection.' + serviceName);
+		this._responseConnection = new Connection(this._connectionOptions, 'responseConnection.' + serviceName);
+
+		this._consumeConnection.on('close', () => {
+			this._reconnectConsume();
+		});
+
+
+		this._responseConnection.on('close', () => {
+			this._reconnectResponse();
 		});
 
 		// Create queue for service
@@ -30,16 +39,16 @@ class Service {
 			this.startConsume();
 		}
 
-		this.responseChannel = this._connection.newChannel();
+		this.responseChannel = this._responseConnection.newChannel();
 	}
 
 	createQueue () {
 		if (this.createQueuePromise) {
 			return this.createQueuePromise;
 		} else {
-			this.createQueuePromise = this._connection.newChannel().then((channel) => {
+			this.createQueuePromise = this._consumeConnection.newChannel().then((channel) => {
 				return channel.assertQueue(this.serviceQueueName, { durable: true }).then(({ queue }) => {
-					return channel.bindQueue(queue, this._connection.exchangeName, this.serviceName).then(() => {
+					return channel.bindQueue(queue, this._consumeConnection.exchangeName, this.serviceName).then(() => {
 						channel.close();
 					});
 				});
@@ -55,20 +64,23 @@ class Service {
 		this._handler[method] = callback;
 	}
 
-	_reconnect () {
-		this._log.info('reconnect reponse channel');
-		this.responseChannel = this._connection.newChannel();
-		this._log.info('reconnect consume service');
+	_reconnectConsume () {
+		this._log.info('reconnect consume service '+this.serviceName);
 		this._consumePromise = null;
 		if (this.isConsumerStarted) {
 			this.startConsume();
 		}
 	}
 
+	_reconnectResponse () {
+		this._log.info('reconnect reponse channel '+this.serviceName);
+		this.responseChannel = this._responseConnection.newChannel();
+	}
+
 	_consume () {
 		this._log.debug('start to consume service ' + this.serviceName);
 		const self = this;
-		return this._connection.newChannel().then((channel) => {
+		return this._consumeConnection.newChannel().then((channel) => {
 			return channel.prefetch(this.limit).then(() => {
 				return channel.consume(
 					this.serviceQueueName,
