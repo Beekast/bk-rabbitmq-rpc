@@ -36,7 +36,7 @@ class RabbitmqRPC {
 			exchangeName
 		};
 
-		this._connection = new Connection(this._connectionOptions);
+		this._connection = new Connection(this._connectionOptions, 'requestConnection');
 
 		// autoReconnect exchange;
 		this._connection.on('close', () => {
@@ -130,7 +130,7 @@ class RabbitmqRPC {
 	}
 
 	createService (name, opts) {
-		return new Service(name, opts, this._connection, this._log);
+		return new Service(name, opts, this._connectionOptions, this._log);
 	}
 }
 
