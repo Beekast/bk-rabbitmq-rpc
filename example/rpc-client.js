@@ -10,10 +10,9 @@ let requestPass = 0;
 let requestFailed = 0;
 
 
-
 async function sum (a, b){
 	const start = Date.now();
-	const result = await client.request('my.service.rpc', 'sum', {a, b}, {timeout: 2000});
+	const result = await client.request('my.service.rpc', 'sum', {a, b}, {timeout: 90000});
 	console.log(result);
 	const ms = Date.now() - start;
 	console.log(`${a} ${b} - ${ms} ms`);
@@ -47,15 +46,15 @@ async function run (){
 	// console.log('#### total time '+ms+ 'ms');
 
 	for (let i = 0; i < totalRequest; i++){
-		try{
+		try {
 			await sum(i, i);
-		} catch(err){
+		} catch (err){
 			console.log(err);
 		}
 
 	}
 
-	//await client.apply('my.service.rpc', 'sum', {a:10, b:11});
+	// await client.apply('my.service.rpc', 'sum', {a:10, b:11});
 	process.exit(0);
 
 }
