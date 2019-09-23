@@ -124,11 +124,13 @@ class Service {
 										);
 									})
 									.catch((err) => {
-										this._log.debug(
+										this._log.warn(
 											'Handler throw an error for service ' +
 												self.serviceName +
 												' and method ' +
 												method
+											, 
+											err
 										);
 										encodedresult = new Buffer(
 											JSON.stringify({
