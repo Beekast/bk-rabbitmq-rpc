@@ -89,7 +89,7 @@ class RabbitmqRPC {
 						channel.responseEmitter.once(requestId, ({ err, data }) => {
 							clearTimeout(requestTimeout);
 							if (err) {
-								return reject(new Error(err));
+								return reject(new Error(`RPC call to '${serviceName}.${method}' failed: ${err}`));
 							}
 							return resolve(data);
 						});
