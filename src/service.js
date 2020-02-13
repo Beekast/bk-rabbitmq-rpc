@@ -154,7 +154,7 @@ class Service {
 									});
 							} else {
 								this._log.debug(
-									"did'nt find handler " + method + ' to consume :( for service ' + self.serviceName
+									"didn't find handler " + method + ' to consume :( for service ' + self.serviceName
 								);
 								try {
 									channel.nack(message);
